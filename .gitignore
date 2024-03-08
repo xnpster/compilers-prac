@@ -1,0 +1,6 @@
+*.o
+qbe/*.o
+
+run
+
+.vscode
