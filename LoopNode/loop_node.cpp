@@ -49,6 +49,7 @@ static void insertNodeToTree(set<shared_ptr<LoopNode>>& tree, shared_ptr<LoopNod
 
     for(auto e : tree) {
         if(e->blocks.find(node->header) != e->blocks.end()) {
+            node->parent = e;
             insertNodeToTree(e->nested, node);
             inserted = true;
             break;
@@ -59,6 +60,7 @@ static void insertNodeToTree(set<shared_ptr<LoopNode>>& tree, shared_ptr<LoopNod
         for(auto it = tree.begin(); it != tree.end();) {
             if(node->blocks.find((*it)->header) != node->blocks.end()) {
                 node->nested.insert(*it);
+                (*it)->parent = node;
                 it = tree.erase(it);
             } else {
                 it++;

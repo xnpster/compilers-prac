@@ -9,3 +9,22 @@ export function w $foo() {
 @end
     ret
 }
+
+export function w $foo2() {
+@start
+    %x =w copy 1
+@l1
+    %x =w copy 0
+@d0
+    %y =w copy %x
+    jnz %y, @d1, @d3
+@d3
+    %y =w copy 0
+@d1
+    %z =w add %x, %y
+    jnz %z, @d0, @l2
+@l2
+    jnz %x, @end, @l1
+@end
+    ret
+}
