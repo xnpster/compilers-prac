@@ -1,15 +1,7 @@
+#include "qbelib.h"
+#include "LoopNode/loop_node.h"
+
 #include<iostream>
-
-#ifdef __cplusplus
-    #define export exports
-    extern "C" {
-        #include "qbe/all.h"
-    }
-    #undef export
-#else
-    #include <qbe/all.h>
-#endif
-
 #include <cstdio>
 
 using namespace std;
@@ -41,6 +33,12 @@ static void funHandler(Fn* fn) {
     filluse(fn);
     ssa(fn);
 
+    auto loops = getLoops(fn);
+
+    for(int i = 0; i < fn->nblk; i++) {
+        Blk* b = fn->rpo[i];
+        cout << b->id << " " << b->name << endl;
+    }
 
     printfn(fn, stdout);
 }
