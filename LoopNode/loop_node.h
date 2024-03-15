@@ -15,8 +15,6 @@ public:
     Blk* header;
     Blk* footer;
 
-    
-
     LoopNode(
         const std::set<Blk*>& blocks,
         Blk* header,
