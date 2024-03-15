@@ -18,10 +18,6 @@ Target T;
 
 char debug['Z'+1];
 
-extern "C" void dbgfile(char*);
-extern "C" void dataHandler(Dat*);
-extern "C" void funHandler(Fn*);
-
 static void init() {
     debug['A'] = 0; /* abi lowering */
     debug['C'] = 0; /* copy elimination */
@@ -35,30 +31,21 @@ static void init() {
     debug['S'] = 0; /* spilling */
 }
 
-void dataHandler(Dat* data) {
-    cout << "Data handler" << endl;
+static void dataHandler(Dat* dat) {
+    (void) dat;
 }
 
-void funHandler(Fn* fun) {
-    cout << "Handler for function " << fun->name << endl;
+static void funHandler(Fn* fn) {
+    fillrpo(fn); // Traverses the CFG in reverse post-order, filling blk->id.
+    fillpreds(fn);
+    filluse(fn);
+    ssa(fn);
 
-    fillrpo(fun);
-    
-    for (Blk* b=fun->start; b; b=b->link) {
-        cout << "Block " << b->id << " " << b->name << endl;
 
-        int instr_num = b->nins;
-
-        for(int i = 0; i < instr_num; i++) {
-            Ins* instr = b->ins + i;
-
-            cout << "Op:" << instr->op << endl;
-        }
-    }
-    
+    printfn(fn, stdout);
 }
 
-void dbgfile(char* str) {
+static void dbgfile(char* str) {
     cout << str << endl;
 }
 
@@ -81,6 +68,7 @@ int main(int argc, char** argv) {
     }
 
     parse(input_file, input_file_name, dbgfile, dataHandler, funHandler);
+    freeall();
 
     return 0;
 }
