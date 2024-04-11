@@ -1,5 +1,6 @@
 #include "qbelib.h"
 #include "LoopNode/loop_node.h"
+#include "LICM/licm.h"
 
 #include<iostream>
 #include <cstdio>
@@ -34,6 +35,7 @@ static void funHandler(Fn* fn) {
     ssa(fn);
 
     auto loops = getLoops(fn);
+    runLoopInvariantCodeMotion(loops, fn);
 
     for(int i = 0; i < fn->nblk; i++) {
         Blk* b = fn->rpo[i];
