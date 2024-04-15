@@ -140,13 +140,6 @@ static void runLoopInvariantCodeMotionForSingleNode(shared_ptr<LoopNode> loop, F
 
     auto defined_vars = getDefined(loop->blocks);
 
-    for(shared_ptr<ComparableRef> df : defined_vars) {
-        printref(df->real, func, stdout);
-        fflush(stdout);
-        cout << endl;
-    }
-    cout << endl;
-
     LoopInvariantAnalysis analysis_obj(func, defined_vars);
     analysis_obj.fit(b);
     analysis_obj.analyze();
