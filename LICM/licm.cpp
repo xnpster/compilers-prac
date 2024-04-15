@@ -166,3 +166,38 @@ void runLoopInvariantCodeMotion(const set<shared_ptr<LoopNode>>& loops, Fn* func
     cout << "Running LICM..." << endl;
     runLoopInvariantCodeMotionRec(loops, func);
 }
+
+static void create_preheader(shared_ptr<LoopNode> loop) {
+    if(!loop->nested.empty()) {
+        for(auto descend: loop->nested) {
+            create_preheader(descend);                              // Создаём прехедер для вложенных циклов 
+            loop -> blocks.insert(descend -> preheader);            // Добавляем прехедеры вложенных циклов в множество блоков текущего цикла
+        }
+    }
+    else {
+        if(!loop->invariants.empty()) {
+            if (loop -> header -> npred == 1) {
+                loop -> preheader == *(loop -> header -> pred);     // Если у хедера только один предок - он становится прехедером
+                return;
+            }
+            Blk* prehead = newblk();                                // Новый прехеддер
+            loop -> preheader = prehead;
+            prehead -> s1 = loop -> header;                         // Прехеддер - новый предок хедера
+            Blk** preds = loop ->header->pred;                      
+            for(int i = 0; i < (loop -> header->npred); i++) {      // В цикле у всех предков хедера потомком делаем прехедер вместо хедера
+                if((preds[i]->s1) == loop -> header) {
+                    preds[i] ->s1 == prehead;
+                }
+                else {
+                    preds[i] ->s2 == prehead;
+                }
+            }
+        }
+    }
+}
+
+static void add_preheaders(vector<shared_ptr<LoopNode>> loops) {
+    for(auto loop: loops) {
+        create_preheader(loop);
+    }
+}
