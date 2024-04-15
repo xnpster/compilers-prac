@@ -1,0 +1,30 @@
+function s $add3(s %a, ...) {
+@start
+    %x =w copy 1
+    jnz %x, @start1, @start2
+@start1
+    %x1 =w copy 2
+    jmp @d0
+@start2
+    %x2 =w copy 3
+    jmp @d0
+@d0
+    %y =w copy %x
+    %ap =l alloc8 32
+    vastart %ap
+    %r =s call $vadd(s %a, l %ap)
+@d1
+    %z =w add %x, %y
+    jnz %z, @d0, @end
+@end
+    ret
+}
+
+function s $vadd(s %a, l %ap) {
+@start
+        %b =s vaarg %ap
+        %c =s vaarg %ap
+        %d =s add %a, %b
+        %e =s add %d, %c
+        ret %e
+}
