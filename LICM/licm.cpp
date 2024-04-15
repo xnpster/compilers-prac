@@ -133,7 +133,9 @@ static void runLoopInvariantCodeMotionForSingleNode(shared_ptr<LoopNode> loop, F
     analysis_obj.fit(b);
     analysis_obj.analyze();
 
-    for(Ref* inv : analysis_obj.getResult()) {
+    loop->invariants = analysis_obj.getResult();
+
+    for(Ref* inv : loop->invariants) {
         printref(*inv, func, stdout);
         fflush(stdout);
         cout << endl;

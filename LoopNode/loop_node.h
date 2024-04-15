@@ -15,6 +15,9 @@ public:
     Blk* header;
     Blk* footer;
 
+    Blk* preheader = NULL;
+    set<Ref*> invariants;
+
     LoopNode(
         const std::set<Blk*>& blocks,
         Blk* header,
