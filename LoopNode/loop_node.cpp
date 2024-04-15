@@ -15,6 +15,9 @@ static shared_ptr<LoopNode> constructLoopNode(Blk* header, Blk* footer) {
     set<Blk*> reachable = { footer, header };
     set<Blk*> worklist = { footer };
 
+    if(reachable.size() == 1)
+        worklist = { }; // handle case with single-block loop
+
     while (!worklist.empty()) {
         set<Blk*> worklist_next = {};
 
@@ -80,7 +83,7 @@ set<shared_ptr<LoopNode>> getLoops(Fn* fn) {
     //DFS
     set<Blk*> visited = { fn->start };
     set<Blk*> at_stack = { fn->start };
-    list<pair<Blk*, list<Blk*>>> stack = { {fn->start , { fn->start->s1, fn->start->s2 } } };
+    list<pair<Blk*, list<Blk*>>> stack = { { fn->start , { fn->start->s1, fn->start->s2 } } };
 
     while(!stack.empty()) {
         auto& top_pair = stack.back();
