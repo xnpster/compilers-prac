@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../qbelib.h"
+#include "../Utils/qbeutils.h"
 
 #include <vector>
 #include <set>
@@ -16,7 +17,7 @@ public:
     Blk* footer;
 
     Blk* preheader = NULL;
-    std::set<Ref*> invariants;
+    std::set<std::shared_ptr<ComparableRef>> invariants;
 
     LoopNode(
         const std::set<Blk*>& blocks,

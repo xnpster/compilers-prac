@@ -1,5 +1,6 @@
 #include "licm.h"
 #include "../DataFlow/forward_data_flow.h"
+#include "../Utils/qbeutils.h"
 
 #include <iostream>
 #include <map>
@@ -8,22 +9,22 @@
 
 using namespace std;
 
-class LoopInvariantAnalysisNode : public DataFlowAnalysisNode<set<Ref*>> {
+class LoopInvariantAnalysisNode : public DataFlowAnalysisNode<set<shared_ptr<ComparableRef>>> {
     Fn* func;
-    set<Ref*> in, out;
+    set<shared_ptr<ComparableRef>> in, out;
 
-    map<Ref*, set<Ref*>> local_deps;
-    set<Ref*>& invariants;
+    map<shared_ptr<ComparableRef>, set<shared_ptr<ComparableRef>>> local_deps;
+    set<shared_ptr<ComparableRef>>& invariants;
 public:
-    set<Ref*> getIn() {
+    set<shared_ptr<ComparableRef>> getIn() {
         return in;
     }
 
-    set<Ref*> getOut() {
+    set<shared_ptr<ComparableRef>> getOut() {
         return out;
     }
 
-    bool addIn(const set<Ref*>& data) {
+    bool addIn(const set<shared_ptr<ComparableRef>>& data) {
         bool inserted = false;
 
         for(auto e : data)
@@ -32,7 +33,7 @@ public:
         return inserted;
     }
 
-    bool addOut(const set<Ref*>& data) {
+    bool addOut(const set<shared_ptr<ComparableRef>>& data) {
         bool inserted = false;
 
         for(auto e : data)
@@ -41,11 +42,11 @@ public:
         return inserted;
     }
 
-    bool forwardData(const set<Ref*>& data) {
-        set<Ref*> new_invs = data;
+    bool forwardData(const set<shared_ptr<ComparableRef>>& data) {
+        set<shared_ptr<ComparableRef>> new_invs = data;
         
         for(auto it = local_deps.begin(); it != local_deps.end();) {
-            for(Ref* e : new_invs)
+            for(shared_ptr<ComparableRef> e : new_invs)
                 it->second.erase(e);
 
             if(it->second.empty()) {
@@ -60,7 +61,7 @@ public:
         return addOut(new_invs);
     }
 
-    LoopInvariantAnalysisNode(Blk* block, Fn* func, set<Ref*>& invariants, const set<Ref*>& defined)
+    LoopInvariantAnalysisNode(Blk* block, Fn* func, set<shared_ptr<ComparableRef>>& invariants, const set<shared_ptr<ComparableRef>>& defined)
     :
         func(func),
         invariants(invariants)
@@ -69,22 +70,24 @@ public:
 
         for(int i = 0; i < block->nins; i++) {
             Ins& instr = block->ins[i];
+            
+            auto res = makeComparable(instr.to);
 
             // TODO: func calls
 
-            for(Ref* arg: {&instr.arg[0], &instr.arg[1]}) {
-                if(arg && !req(*arg, R) && arg->type != RInt && 
+            for(auto arg: { makeComparable(instr.arg[0]), makeComparable(instr.arg[1]) }) {
+                if(!req(arg->real, R) && arg->real.type != RInt && 
                    defined.find(arg) != defined.end() &&
                    invariants.find(arg) == invariants.end()
                 )
                 {
-                    local_deps[&instr.to].insert(arg);
+                    local_deps[res].insert(arg);
                 }
             }
 
-            if(local_deps.find(&instr.to) == local_deps.end()) {
-                out.insert(&instr.to);
-                invariants.insert(&instr.to);
+            if(local_deps.find(res) == local_deps.end()) {
+                out.insert(res);
+                invariants.insert(res);
             }
         }
     }
@@ -93,7 +96,7 @@ public:
 class LoopInvariantAnalysis : public ForwardDataFlowAnalysis<LoopInvariantAnalysisNode> {
 protected:
     Fn* func;
-    set<Ref*> invariants = {}, defined;
+    set<shared_ptr<ComparableRef>> invariants = {}, defined;
 
     shared_ptr<LoopInvariantAnalysisNode> createNode(Blk* block) override {
         return shared_ptr<LoopInvariantAnalysisNode>(
@@ -101,21 +104,28 @@ protected:
         );
     }
 public:
-    LoopInvariantAnalysis(Fn* func, const set<Ref*>& defined)
+    LoopInvariantAnalysis(Fn* func, const set<shared_ptr<ComparableRef>>& defined)
     : 
         func(func), 
         defined(defined)
     { }
-    set<Ref*> getResult() { return invariants; }
+    set<shared_ptr<ComparableRef>> getResult() { return invariants; }
 };
 
-static set<Ref*> getDefined(const std::set<Blk *>& b) {
-    set<Ref*> res = {};
+static set<shared_ptr<ComparableRef>> getDefined(const std::set<Blk *>& b) {
+    set<shared_ptr<ComparableRef>> res = {};
 
     for(Blk* block: b) {
+        Phi* p = block->phi;
+
+        while (p) {
+            res.insert(makeComparable(p->to));
+            p = p->link;
+        }
+
         for(int i = 0; i < block->nins; i++) {
             Ins& instr = block->ins[i];
-            res.insert(&instr.to);
+            res.insert(makeComparable(instr.to));
         }
     }
 
@@ -129,14 +139,22 @@ static void runLoopInvariantCodeMotionForSingleNode(shared_ptr<LoopNode> loop, F
     cout << "LICM for loop " << loop->header->name << " -> " << loop->footer->name << endl;
 
     auto defined_vars = getDefined(loop->blocks);
+
+    for(shared_ptr<ComparableRef> df : defined_vars) {
+        printref(df->real, func, stdout);
+        fflush(stdout);
+        cout << endl;
+    }
+    cout << endl;
+
     LoopInvariantAnalysis analysis_obj(func, defined_vars);
     analysis_obj.fit(b);
     analysis_obj.analyze();
 
     loop->invariants = analysis_obj.getResult();
 
-    for(Ref* inv : loop->invariants) {
-        printref(*inv, func, stdout);
+    for(shared_ptr<ComparableRef> inv : loop->invariants) {
+        printref(inv->real, func, stdout);
         fflush(stdout);
         cout << endl;
     }
