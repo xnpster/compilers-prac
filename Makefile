@@ -16,7 +16,8 @@ OBJ = \
 	main.o \
 	LoopNode/loop_node.o \
 	Utils/qbeutils.o \
-	LICM/licm.o
+	LICM/licm.o \
+	LICM/preheader.o
 
 .PHONY: $(BIN)
 

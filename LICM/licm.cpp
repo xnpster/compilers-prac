@@ -1,4 +1,5 @@
 #include "licm.h"
+#include "preheader.h"
 #include "../DataFlow/forward_data_flow.h"
 #include "../Utils/qbeutils.h"
 
@@ -165,4 +166,5 @@ static void runLoopInvariantCodeMotionRec(const set<shared_ptr<LoopNode>>& loops
 void runLoopInvariantCodeMotion(const set<shared_ptr<LoopNode>>& loops, Fn* func) {
     cout << "Running LICM..." << endl;
     runLoopInvariantCodeMotionRec(loops, func);
+    add_preheaders(loops, func);
 }
