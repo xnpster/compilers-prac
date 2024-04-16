@@ -167,4 +167,5 @@ void runLoopInvariantCodeMotion(const set<shared_ptr<LoopNode>>& loops, Fn* func
     cout << "Running LICM..." << endl;
     runLoopInvariantCodeMotionRec(loops, func);
     add_preheaders(loops, func);
+    fill_preheaders(loops, func);
 }

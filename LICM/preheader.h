@@ -6,3 +6,4 @@
 #include <set>
 
 void add_preheaders(std::set<std::shared_ptr<LoopNode>> loops, Fn* func);
+void fill_preheaders(std::set<std::shared_ptr<LoopNode>> loops, Fn* func);
