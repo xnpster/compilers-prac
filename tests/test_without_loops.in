@@ -1,0 +1,16 @@
+function s $add3(s %a, ...) {
+@start
+        %ap =l alloc8 32
+        vastart %ap
+        %r =s call $vadd(s %a, l %ap)
+        ret %r
+}
+
+function s $vadd(s %a, l %ap) {
+@start
+        %b =s vaarg %ap
+        %c =s vaarg %ap
+        %d =s add %a, %b
+        %e =s add %d, %c
+        ret %e
+}
