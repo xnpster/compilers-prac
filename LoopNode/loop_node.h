@@ -33,3 +33,7 @@ public:
 };
 
 std::set<std::shared_ptr<LoopNode>> getLoops(Fn* fn);
+
+#if DEBUG
+void printLoopNodes(const std::set<std::shared_ptr<LoopNode>> nodes, int lvl);
+#endif

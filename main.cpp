@@ -39,6 +39,10 @@ static void funHandler(Fn* fn) {
         printfn(fn, stdout);
     #endif
     auto loops = getLoops(fn);
+    #if DEBUG
+        cout << "Loops:" << endl;
+        printLoopNodes(loops, 0);
+    #endif
     runLoopInvariantCodeMotion(loops, fn);
 
     #if DEBUG

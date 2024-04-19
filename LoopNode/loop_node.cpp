@@ -137,3 +137,25 @@ set<shared_ptr<LoopNode>> getLoops(Fn* fn) {
 
     return res;
 }
+
+#if DEBUG
+void printLoopNodes(const set<shared_ptr<LoopNode>> nodes, int lvl) {
+    for(auto e : nodes) {
+        string prefix = string(lvl*2, ' ');
+
+        cout << prefix << "header: " << e->header->name << endl;
+        cout << prefix << "footers: ";
+        for(auto ft : e->footers)
+            cout << ft->name << ", ";
+        cout << prefix << endl;
+
+        cout << prefix << "blocks: ";
+        for(auto b : e->blocks)
+            cout << b->name << ", ";
+        cout << prefix << endl;
+        cout << prefix << e->nested.size() << " nested" << endl;
+
+        printLoopNodes(e->nested, lvl+1);
+    }
+}
+#endif
